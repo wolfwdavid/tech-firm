@@ -5,7 +5,7 @@
 		tagline: string;
 		priceMonthly: number;
 		features: string[];
-		accent: 'storefront' | 'customer' | 'payments';
+		accent: 'email' | 'manager' | 'automations';
 		featured?: boolean;
 	};
 
@@ -15,7 +15,7 @@
 			name: 'Single Origin',
 			tagline: 'One bean, one farm, one month.',
 			priceMonthly: 18,
-			accent: 'customer',
+			accent: 'email',
 			features: [
 				'250g of one rotating single-origin bean',
 				'Shipped the day it is roasted',
@@ -28,7 +28,7 @@
 			name: 'House Blend',
 			tagline: 'The one most subscribers stay on.',
 			priceMonthly: 28,
-			accent: 'storefront',
+			accent: 'manager',
 			featured: true,
 			features: [
 				'350g of our signature seasonal blend',
@@ -42,7 +42,7 @@
 			name: "Roaster's Choice",
 			tagline: 'For the people who keep their grinder dialed.',
 			priceMonthly: 48,
-			accent: 'payments',
+			accent: 'automations',
 			features: [
 				'500g curated by the roaster — anything goes',
 				'Includes one experimental / micro-lot per quarter',
@@ -54,36 +54,36 @@
 
 	function accentBorder(accent: Tier['accent']) {
 		return {
-			storefront: 'border-role-storefront/40 hover:border-role-storefront/80',
-			customer: 'border-role-customer/40 hover:border-role-customer/80',
-			payments: 'border-role-payments/40 hover:border-role-payments/80'
+			email: 'border-role-email/40 hover:border-role-email/80',
+			manager: 'border-role-manager/40 hover:border-role-manager/80',
+			automations: 'border-role-automations/40 hover:border-role-automations/80'
 		}[accent];
 	}
 
 	function accentText(accent: Tier['accent']) {
 		return {
-			storefront: 'text-role-storefront',
-			customer: 'text-role-customer',
-			payments: 'text-role-payments'
+			email: 'text-role-email',
+			manager: 'text-role-manager',
+			automations: 'text-role-automations'
 		}[accent];
 	}
 
 	function accentGlow(accent: Tier['accent']) {
 		return {
-			storefront: 'shadow-[0_0_60px_-20px_var(--color-role-storefront)]',
-			customer: 'shadow-[0_0_60px_-20px_var(--color-role-customer)]',
-			payments: 'shadow-[0_0_60px_-20px_var(--color-role-payments)]'
+			email: 'shadow-[0_0_60px_-20px_var(--color-role-email)]',
+			manager: 'shadow-[0_0_60px_-20px_var(--color-role-manager)]',
+			automations: 'shadow-[0_0_60px_-20px_var(--color-role-automations)]'
 		}[accent];
 	}
 
 	function accentButton(accent: Tier['accent']) {
 		return {
-			storefront:
-				'bg-role-storefront/10 border border-role-storefront/60 text-role-storefront hover:bg-role-storefront/20',
-			customer:
-				'bg-role-customer/10 border border-role-customer/60 text-role-customer hover:bg-role-customer/20',
-			payments:
-				'bg-role-payments/10 border border-role-payments/60 text-role-payments hover:bg-role-payments/20'
+			email:
+				'bg-role-email/10 border border-role-email/60 text-role-email hover:bg-role-email/20',
+			manager:
+				'bg-role-manager/10 border border-role-manager/60 text-role-manager hover:bg-role-manager/20',
+			automations:
+				'bg-role-automations/10 border border-role-automations/60 text-role-automations hover:bg-role-automations/20'
 		}[accent];
 	}
 
@@ -94,10 +94,10 @@
 </script>
 
 <svelte:head>
-	<title>Pour Decisions — coffee, decided for you</title>
+	<title>Decisions — decided for you</title>
 	<meta
 		name="description"
-		content="A small-batch coffee subscription, run end-to-end by one person and a constellation of AI agents."
+		content="A small-batch subscription, run end-to-end by one person and a constellation of AI agents."
 	/>
 </svelte:head>
 
@@ -105,8 +105,8 @@
 	<header class="mx-auto flex max-w-6xl items-center justify-between">
 		<div class="flex items-baseline gap-3">
 			<span
-				class="text-role-storefront font-display text-2xl tracking-[var(--tracking-mystic)] uppercase"
-				>Pour Decisions</span
+				class="text-role-manager font-display text-2xl tracking-[var(--tracking-mystic)] uppercase"
+				>Decisions</span
 			>
 		</div>
 		<div
@@ -114,7 +114,7 @@
 		>
 			<span><span class="text-text-primary">47</span> subscribers</span>
 			<span><span class="text-text-primary">$2,340</span> mrr</span>
-			<span class="text-role-storefront">● live</span>
+			<span class="text-role-manager">● live</span>
 		</div>
 	</header>
 
@@ -123,7 +123,7 @@
 			A one-person AI business
 		</p>
 		<h1 class="font-display text-text-primary text-5xl leading-tight sm:text-6xl">
-			Coffee, <span class="text-role-storefront italic">decided</span> for you.
+			<span class="text-role-manager italic">Decided</span> for you.
 		</h1>
 		<p class="text-text-secondary mt-6 text-lg leading-relaxed">
 			Every month, a 250–500g bag chosen by the roaster, shipped the day it's roasted, paired with
