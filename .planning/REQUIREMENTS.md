@@ -108,12 +108,16 @@ Explicitly excluded. Documented to prevent scope creep.
 | GRPH-04 | Phase 1 | Pending |
 | GRPH-05 | Phase 1 | Pending |
 | GRPH-06 | Phase 1 | Pending |
+| SEED-01 | Phase 1 | Pending |
+| SEED-02 | Phase 1 | Pending |
 | AGNT-01 | Phase 2 | Pending |
 | AGNT-02 | Phase 2 | Pending |
 | AGNT-03 | Phase 2 | Pending |
 | AGNT-04 | Phase 2 | Pending |
 | AGNT-05 | Phase 2 | Pending |
 | AGNT-06 | Phase 2 | Pending |
+| SEED-03 | Phase 2 | Pending |
+| SEED-04 | Phase 2 | Pending |
 | CLON-01 | Phase 3 | Pending |
 | CLON-02 | Phase 3 | Pending |
 | CLON-03 | Phase 3 | Pending |
@@ -124,10 +128,6 @@ Explicitly excluded. Documented to prevent scope creep.
 | AUTO-02 | Phase 3 | Pending |
 | AUTO-03 | Phase 3 | Pending |
 | AUTO-04 | Phase 3 | Pending |
-| SEED-01 | Phase 4 | Pending |
-| SEED-02 | Phase 4 | Pending |
-| SEED-03 | Phase 4 | Pending |
-| SEED-04 | Phase 4 | Pending |
 | POLI-01 | Phase 4 | Pending |
 | POLI-02 | Phase 4 | Pending |
 | POLI-03 | Phase 4 | Pending |
@@ -138,6 +138,12 @@ Explicitly excluded. Documented to prevent scope creep.
 - Mapped to phases: 35
 - Unmapped: 0 ✓
 
+**Phase distribution:**
+- Phase 1 (Foundation & Graph): 13 reqs
+- Phase 2 (Agents Talk Back): 8 reqs
+- Phase 3 (Living System): 10 reqs
+- Phase 4 (Demo-Ready Polish): 4 reqs
+
 ---
 *Requirements defined: 2026-05-23*
-*Last updated: 2026-05-23 after initial definition*
+*Last updated: 2026-05-23 — traceability synced with ROADMAP.md (SEED-03/04 moved Phase 4→2)*
