@@ -21,23 +21,33 @@ Automations are the wires. When Storefront detects a new signup, it tells Email 
 
 ---
 
-## Demo script (2-3 min)
+## Demo script (~3 min, full golden path)
 
-1. **Open the app.** The "Entering the Crystarium" intro fades in, then the Crystarium reveals. The Manager drawer auto-opens with the morning briefing — 5 bullets summarizing what the other agents did overnight. *(Header: Pour Decisions, $2,340 MRR, 47 customers.)*
+> Press **`?`** at any time during the demo to bring up an on-screen cheat sheet of every shortcut. Press **`Esc`** or click anywhere to dismiss.
 
-2. **Read the briefing.** "Storefront drove 3 signups overnight. Email has the decaf launch queued. Customer Chat resolved 4 tickets…" Each bullet has a role-colored dot. The bullets are aggregated live from each agent's recent-actions feed.
+1. **First load → onboarding wizard.** The Crystarium asks for the business name + niche, current numbers, then previews all 8 agents personalized for the niche. Tap "Enter the Crystarium" → a brief "Entering the Crystarium" fade reveals the dashboard. Manager drawer auto-opens with the morning briefing.
 
-3. **Talk to the AI CEO.** Type "What should I prioritize this morning?" → the Manager node pulses "thinking…", then replies in-character. The reply matches your message via keyword overlap, so it feels less random than a default canned response.
+2. **Read the briefing.** 5 bullets summarizing what the other agents did overnight, aggregated live from their recent-actions feeds. Each bullet has a role-colored dot.
 
-4. **Click "Clone & Specialize" (the wand icon)** on the Manager. Type "VIP retention" and hit Spawn. A smaller gold crystal appears next to the Manager with a lineage edge. The drawer switches to the clone. Ask it anything — its responses are prefixed `[VIP retention]` to show it inherited the parent's role but with a narrower focus.
+3. **Talk to your AI CEO.** Type *"What should I prioritize this morning?"* and hit Enter. The Manager pulses "thinking…" then **types its reply word-by-word**, with a blinking gold caret. The response is in your CEO's voice and addresses the question.
 
-5. **Click the Customer Chat node** (cyan). The drawer swaps. Ask: "Any churn risk this morning?" Customer Chat replies in-character. Notice the edge from Customer Chat to one of its neighbors lights up briefly — chat triggered a downstream automation (Customer → Email: nurture queued).
+4. **Press `Shift+D` → press `1`.** The demo control panel slides up, scenario #1 ("New customer signup") fires. **The Storefront→Email edge pulses with traveling light**, the automation log adds a row, the Storefront agent's recent-actions feed shows the signup. Audience sees a fake customer kick the system into motion.
 
-6. **Bottom-left: open the Automation Log.** Click the "Automations" pill. The expanded panel shows the last ~20 events with timestamps. Every 15-22 seconds another seeded automation fires — Storefront → Email, Payments → Analytics, etc. The pill glows briefly on each new event.
+5. **Click the Storefront crystal.** Drawer switches to Storefront's agent (amber/orange). Ask *"any conversion ideas this week?"* — agent streams a reply about hero copy, A/B testing, signup flow. Notice the Storefront→Content edge briefly pulses — chat triggered a downstream automation.
 
-7. **(Optional) Wait 15 seconds without touching anything.** A seeded automation fires on its own. An edge pulses with traveling light. Log gets a new row.
+6. **Hit the Wand (✨) icon → type "decaf-only buyers" → Spawn.** A smaller amber crystal spawns next to Storefront with a lineage edge. Drawer switches to the clone. Ask it anything — replies are prefixed `[decaf-only buyers]` showing it inherited the parent's role but narrowed.
 
-8. **(Optional) Hit Reset (↺) in the header** to clear and replay the intro for the next viewer.
+7. **Bottom-left: click the "Automations" pill.** The log expands. ~5-15 events visible: the seeded fires (every 15-22s on a timer), the demo-panel fire, the chat-triggered fires from steps 5-6. Each has a timestamp + source/target role dots + plain-English label.
+
+8. **(Closing beat) Wait 5-10 seconds without touching anything.** A seeded automation fires on its own — an edge pulses, the log gets a new row. Punctuates "this thing runs whether you're at the keyboard or not."
+
+9. **Reset for the next viewer.** Click the ↺ icon in the header → confirm. localStorage clears, page reloads, onboarding wizard is back for the next demo.
+
+### Defense in depth
+
+- The whole demo above works **without an internet connection** — agents reply via the keyword matcher, automations fire on a timer, the demo panel pulses edges locally.
+- Add `VITE_LIVE_AGENTS=true` + `ANTHROPIC_API_KEY` to `.env.local` for live Claude Haiku replies. If the live call fails for any reason, the canned-response path takes over automatically for that one turn — the audience never sees a broken state.
+- If Claude-A's storefront / Supabase isn't ready, the demo panel guarantees the magic pulse moment.
 
 ---
 
