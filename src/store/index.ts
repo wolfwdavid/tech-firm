@@ -166,6 +166,7 @@ export const useCrystariumStore = create<CrystariumState>()(
               node.specialization,
               history,
               trimmed,
+              state.business,
             ),
           )
           appendChat({ nodeId, from: 'agent', text: result.text })
@@ -267,7 +268,7 @@ export const useCrystariumStore = create<CrystariumState>()(
             }
           }
           return {
-            business,
+            business: { ...business, niche },
             agents: refreshedAgents,
             onboarded: true,
           }

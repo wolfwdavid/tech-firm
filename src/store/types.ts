@@ -45,6 +45,8 @@ export interface AutomationEvent {
 
 export interface BusinessSeed {
   name: string
+  /** Optional one-line niche, set during onboarding. Feeds the live agent system prompt. */
+  niche?: string
   mrr: number
   customerCount: number
   todayActivity: number

@@ -29,6 +29,14 @@ export const liveAgentDriver: AgentDriver = {
       userText: req.userText,
       // canned responses passed as voice samples for the server to seed system prompt with
       voiceSamples: req.cannedResponses.slice(0, 4),
+      business: req.business
+        ? {
+            name: req.business.name,
+            niche: req.business.niche,
+            mrr: req.business.mrr,
+            customerCount: req.business.customerCount,
+          }
+        : undefined,
     }
     const res = await fetch(url, {
       method: 'POST',

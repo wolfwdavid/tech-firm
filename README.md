@@ -104,9 +104,15 @@ src/
 ## What's mocked, what's real
 
 - **Real**: the graph, state, persistence, animations, the response-matching algorithm, the timer-driven automations, the cloning lineage. These are first-class production code.
-- **Mocked**: the agents' "intelligence". Each agent has 6-7 hand-written canned responses; a keyword scorer picks the best match for the user message. No LLM call. Trades fidelity for demo reliability.
+- **Mocked by default** (v1 behavior): the agents' "intelligence". Each agent has 6-7 hand-written canned responses; a keyword scorer picks the best match for the user message. No LLM call. Trades fidelity for demo reliability.
+- **Live mode** (v2 opt-in): set `VITE_LIVE_AGENTS=true` and provide `ANTHROPIC_API_KEY` in `.env.local`. Agent chat will hit `POST /api/chat` (Vercel function — works locally via Vite dev middleware), which runs Claude Haiku with prompt caching on the system prompt. If the live call fails for any reason, the composite driver automatically falls back to the canned response path so the demo never stalls.
 
-To wire a live LLM, replace the `setTimeout`+`pickResponse` block in `useCrystariumStore.sendUserMessage` with a `fetch` to whichever API you like — the rest of the system is already shaped around `(nodeId, text) → reply` and would handle latency through the existing "thinking…" state.
+### Wiring live agents
+
+1. Copy `.env.example` → `.env.local`
+2. Set `VITE_LIVE_AGENTS=true` and `ANTHROPIC_API_KEY=sk-ant-...`
+3. Restart `npm run dev`
+4. The chat now streams through Claude Haiku via `/api/chat` instead of the keyword matcher.
 
 ---
 

@@ -1,4 +1,4 @@
-import type { Agent, ChatMessage, NodeRole } from '../../store/types'
+import type { Agent, BusinessSeed, ChatMessage, NodeRole } from '../../store/types'
 
 export interface AgentReplyRequest {
   /** The capability node's id (e.g. node-manager, node-storefront, or a clone id). */
@@ -17,6 +17,8 @@ export interface AgentReplyRequest {
   history: Pick<ChatMessage, 'from' | 'text'>[]
   /** The user's current message. */
   userText: string
+  /** Business context — niche, name, KPIs — so live agents know what business they staff. */
+  business?: BusinessSeed
 }
 
 export interface AgentReplyResult {
@@ -39,6 +41,7 @@ export function buildRequest(
   specialization: string | undefined,
   history: Pick<ChatMessage, 'from' | 'text'>[],
   userText: string,
+  business?: BusinessSeed,
 ): AgentReplyRequest {
   return {
     nodeId: agent.nodeId,
@@ -49,5 +52,6 @@ export function buildRequest(
     specialization,
     history,
     userText,
+    business,
   }
 }
