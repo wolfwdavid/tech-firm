@@ -1,0 +1,99 @@
+import { Sparkles } from 'lucide-react'
+import { useBusiness } from '../store'
+
+function formatMoney(n: number): string {
+  return `$${n.toLocaleString()}`
+}
+
+export function Header() {
+  const business = useBusiness()
+
+  return (
+    <header
+      className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between px-8 backdrop-blur-md"
+      style={{
+        background: 'rgba(22, 24, 48, 0.82)',
+        borderBottom: '1px solid rgba(160,180,255,0.18)',
+      }}
+    >
+      {/* Left: brand */}
+      <div className="flex items-center gap-3">
+        <div
+          className="flex h-8 w-8 items-center justify-center rounded-full"
+          style={{
+            background:
+              'radial-gradient(circle at 50% 40%, #f5c45e, #9c7a2e)',
+            boxShadow: '0 0 16px rgba(245,196,94,0.45)',
+          }}
+        >
+          <Sparkles size={16} color="rgba(255,255,255,0.95)" strokeWidth={1.8} />
+        </div>
+        <div>
+          <div
+            className="text-[18px] font-bold uppercase"
+            style={{
+              letterSpacing: '0.18em',
+              color: '#e8e9ff',
+            }}
+          >
+            {business.name}
+          </div>
+          <div
+            className="text-[10px] uppercase"
+            style={{
+              letterSpacing: '0.20em',
+              color: '#a8aacc',
+            }}
+          >
+            One-person AI business · Crystarium
+          </div>
+        </div>
+      </div>
+
+      {/* Right: KPI cluster */}
+      <div className="flex items-center gap-6">
+        <Kpi label="MRR" value={formatMoney(business.mrr)} accent="#5fdba0" />
+        <Divider />
+        <Kpi label="Customers" value={business.customerCount.toString()} accent="#4fd0e8" />
+        <Divider />
+        <Kpi label="Today" value={business.todayActivity.toString()} accent="#f5c45e" />
+      </div>
+    </header>
+  )
+}
+
+function Kpi({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <div className="flex flex-col items-end">
+      <div
+        className="text-[10px] font-medium uppercase"
+        style={{
+          letterSpacing: '0.20em',
+          color: '#a8aacc',
+        }}
+      >
+        {label}
+      </div>
+      <div
+        className="text-[22px] font-semibold tabular-nums"
+        style={{
+          color: '#e8e9ff',
+          textShadow: `0 0 12px ${accent}40`,
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  )
+}
+
+function Divider() {
+  return (
+    <div
+      className="h-8 w-px"
+      style={{ background: 'rgba(255,255,255,0.08)' }}
+      aria-hidden
+    />
+  )
+}

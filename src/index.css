@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #05060d;
+  color: #e8e9ff;
+  overflow: hidden;
+}
+
+/* React Flow attribution kill — we hide via proOptions but belt-and-suspenders */
+.react-flow__attribution {
+  display: none !important;
+}
+
+/* React Flow handles — fully invisible */
+.react-flow__handle {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 1px !important;
+  height: 1px !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Disable React Flow's default node selection ring — we draw our own */
+.react-flow__node.selected {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.react-flow__edge-path {
+  transition: stroke-opacity 220ms ease-out, stroke-width 220ms ease-out;
+}
+
+/* Custom scrollbar for drawer (Phase 2 ready) */
+.scrollbar-mystic::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-mystic::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-mystic::-webkit-scrollbar-thumb {
+  background: rgba(160, 180, 255, 0.18);
+  border-radius: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
