@@ -15,6 +15,7 @@ import {
   seedEdges,
   seedNodes,
 } from '../data/seed'
+import { pickResponse } from '../lib/responseMatcher'
 
 interface CloneInput {
   parentId: string
@@ -30,12 +31,16 @@ interface CrystariumState {
   automationLog: AutomationEvent[]
   selectedNodeId: string | null
   bootSeen: boolean
+  pulsingEdgeId: string | null
 
   // actions
   setSelectedNodeId: (id: string | null) => void
   setNodeStatus: (id: string, status: NodeStatus) => void
   appendChat: (msg: Omit<ChatMessage, 'id' | 'ts'>) => void
+  appendRecentAction: (nodeId: string, text: string) => void
   logAutomation: (evt: Omit<AutomationEvent, 'id' | 'ts'>) => void
+  fireAutomation: (fromNodeId: string, toNodeId: string, label: string) => void
+  sendUserMessage: (nodeId: string, text: string) => void
   addClone: (input: CloneInput) => string
   resetToSeed: () => void
   markBootSeen: () => void
@@ -43,7 +48,15 @@ interface CrystariumState {
 
 const initialState: Pick<
   CrystariumState,
-  'business' | 'nodes' | 'edges' | 'agents' | 'chat' | 'automationLog' | 'selectedNodeId' | 'bootSeen'
+  | 'business'
+  | 'nodes'
+  | 'edges'
+  | 'agents'
+  | 'chat'
+  | 'automationLog'
+  | 'selectedNodeId'
+  | 'bootSeen'
+  | 'pulsingEdgeId'
 > = {
   business: seedBusiness,
   nodes: seedNodes,
@@ -53,6 +66,7 @@ const initialState: Pick<
   automationLog: [],
   selectedNodeId: null,
   bootSeen: false,
+  pulsingEdgeId: null,
 }
 
 let idCounter = 0
@@ -78,6 +92,20 @@ export const useCrystariumStore = create<CrystariumState>()(
           ],
         })),
 
+      appendRecentAction: (nodeId, text) =>
+        set((s) => {
+          const agent = s.agents[nodeId]
+          if (!agent) return {}
+          const updated: Agent = {
+            ...agent,
+            recentActions: [
+              { ts: Date.now(), text },
+              ...agent.recentActions,
+            ].slice(0, 5),
+          }
+          return { agents: { ...s.agents, [nodeId]: updated } }
+        }),
+
       logAutomation: (evt) =>
         set((s) => ({
           automationLog: [
@@ -85,6 +113,70 @@ export const useCrystariumStore = create<CrystariumState>()(
             ...s.automationLog,
           ].slice(0, 50),
         })),
+
+      fireAutomation: (fromNodeId, toNodeId, label) => {
+        const { edges, logAutomation } = get()
+        const edge = edges.find(
+          (e) =>
+            (e.source === fromNodeId && e.target === toNodeId) ||
+            (e.source === toNodeId && e.target === fromNodeId),
+        )
+        logAutomation({ fromNodeId, toNodeId, label })
+        if (edge) {
+          set({ pulsingEdgeId: edge.id })
+          setTimeout(() => {
+            // Only clear if it's still the same pulse
+            if (get().pulsingEdgeId === edge.id) {
+              set({ pulsingEdgeId: null })
+            }
+          }, 1600)
+        }
+      },
+
+      sendUserMessage: (nodeId, text) => {
+        const trimmed = text.trim()
+        if (!trimmed) return
+        const { appendChat, setNodeStatus, appendRecentAction } = get()
+        appendChat({ nodeId, from: 'user', text: trimmed })
+        setNodeStatus(nodeId, 'thinking')
+        const delay = 700 + Math.random() * 400
+        setTimeout(() => {
+          const state = get()
+          const agent = state.agents[nodeId]
+          if (!agent) {
+            setNodeStatus(nodeId, 'idle')
+            return
+          }
+          const recentAgentMsgs = state.chat
+            .filter((m) => m.nodeId === nodeId && m.from === 'agent')
+            .slice(-3)
+            .map((m) => m.text)
+          const reply = pickResponse(trimmed, agent.cannedResponses, recentAgentMsgs)
+          appendChat({ nodeId, from: 'agent', text: reply })
+          appendRecentAction(
+            nodeId,
+            `Replied: "${trimmed.length > 40 ? trimmed.slice(0, 40) + '…' : trimmed}"`,
+          )
+          setNodeStatus(nodeId, 'idle')
+
+          // Phase 3 hook: chat-triggered automation
+          const triggerMap: Record<string, [string, string]> = {
+            'node-storefront': ['node-content', 'Storefront → Content: idea queued'],
+            'node-customer': ['node-email', 'Customer → Email: nurture queued'],
+            'node-email': ['node-payments', 'Email → Payments: receipt sync'],
+            'node-content': ['node-email', 'Content → Email: campaign asset ready'],
+            'node-payments': ['node-analytics', 'Payments → Analytics: txn logged'],
+            'node-analytics': ['node-manager', 'Analytics → Manager: insight flagged'],
+            'node-automations': ['node-manager', 'Automations → Manager: wire active'],
+            'node-manager': ['node-analytics', 'Manager → Analytics: priority shifted'],
+          }
+          const trigger = triggerMap[nodeId]
+          if (trigger && Math.random() > 0.35) {
+            const [target, label] = trigger
+            setTimeout(() => get().fireAutomation(nodeId, target, label), 400)
+          }
+        }, delay)
+      },
 
       addClone: ({ parentId, specialization }) => {
         const parent = get().nodes.find((n) => n.id === parentId)
@@ -136,9 +228,10 @@ export const useCrystariumStore = create<CrystariumState>()(
     }),
     {
       name: 'crystarium-v1',
+      version: 1,
       partialize: (state) => ({
         business: state.business,
-        nodes: state.nodes,
+        nodes: state.nodes.map((n) => ({ ...n, status: 'idle' as const })),
         edges: state.edges,
         agents: state.agents,
         chat: state.chat,
@@ -148,6 +241,8 @@ export const useCrystariumStore = create<CrystariumState>()(
     },
   ),
 )
+
+export const usePulsingEdgeId = () => useCrystariumStore((s) => s.pulsingEdgeId)
 
 // Selectors
 export const useBusiness = () => useCrystariumStore((s) => s.business)
