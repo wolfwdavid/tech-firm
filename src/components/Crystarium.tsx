@@ -16,6 +16,7 @@ import {
   useCrystariumStore,
   useEdges,
   useNodes,
+  usePulsingEdgeId,
   useSelectedNodeId,
 } from '../store'
 
@@ -26,6 +27,7 @@ export function Crystarium() {
   const storeNodes = useNodes()
   const storeEdges = useEdges()
   const selectedNodeId = useSelectedNodeId()
+  const pulsingEdgeId = usePulsingEdgeId()
   const setSelectedNodeId = useCrystariumStore((s) => s.setSelectedNodeId)
 
   const rfNodes = useMemo<Node<CrystalNodeData>[]>(
@@ -62,10 +64,11 @@ export function Crystarium() {
         data: {
           sourceRole,
           targetRole,
+          pulse: e.id === pulsingEdgeId,
         },
       }
     })
-  }, [storeEdges, storeNodes])
+  }, [storeEdges, storeNodes, pulsingEdgeId])
 
   const handleNodeClick: NodeMouseHandler = useCallback(
     (_evt, node) => {
