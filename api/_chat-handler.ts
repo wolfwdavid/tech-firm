@@ -158,3 +158,80 @@ export async function handleChat(body: ChatRequest): Promise<ChatResponse> {
     return { error: msg, latencyMs: Date.now() - start }
   }
 }
+
+/**
+ * Streaming variant — yields { delta } events for each text fragment Anthropic
+ * produces, then a terminal { done, text, latencyMs } event. Consumers compose
+ * the final text by concatenating deltas (the terminal event also includes it).
+ *
+ * Yields a single { error } event if the call fails for any reason. Callers
+ * should still finalize the response cleanly when they see it.
+ */
+export type StreamEvent =
+  | { type: 'delta'; delta: string }
+  | { type: 'done'; text: string; latencyMs: number }
+  | { type: 'error'; error: string; latencyMs: number }
+
+export async function* handleChatStream(
+  body: ChatRequest,
+): AsyncGenerator<StreamEvent, void, unknown> {
+  const start = Date.now()
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    yield {
+      type: 'error',
+      error:
+        'ANTHROPIC_API_KEY is not set on the server. Add it to .env.local (dev) or your Vercel project env (prod).',
+      latencyMs: 0,
+    }
+    return
+  }
+
+  const systemPrompt = buildSystemPrompt(body)
+  const messages = buildMessages(body)
+  if (messages.length === 0) {
+    yield {
+      type: 'error',
+      error: 'No user message to respond to.',
+      latencyMs: 0,
+    }
+    return
+  }
+
+  try {
+    const client = new Anthropic({ apiKey })
+    const stream = client.messages.stream({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      system: [
+        {
+          type: 'text',
+          text: systemPrompt,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      messages,
+    })
+
+    let accumulated = ''
+    for await (const event of stream) {
+      if (
+        event.type === 'content_block_delta' &&
+        event.delta.type === 'text_delta'
+      ) {
+        const delta = event.delta.text
+        accumulated += delta
+        yield { type: 'delta', delta }
+      }
+    }
+
+    yield {
+      type: 'done',
+      text: accumulated.trim(),
+      latencyMs: Date.now() - start,
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Anthropic API error'
+    yield { type: 'error', error: msg, latencyMs: Date.now() - start }
+  }
+}
