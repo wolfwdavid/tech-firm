@@ -9,7 +9,7 @@ Both laptops are operated by the same human (GitHub: `wolfwdavid`, email: `cdw84
 | Tag | Laptop (Windows user) | Role |
 |---|---|---|
 | **Claude-A** | `mkarurosun` | (set per session) |
-| **Claude-B** | (other laptop) | (set per session) |
+| **Claude-B** | `Mkaru` | (set per session) |
 
 Tags are per-laptop, not per-task. Reassign roles (builder/reviewer, frontend/backend, etc.) per work item.
 
