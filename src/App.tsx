@@ -5,6 +5,7 @@ import { AutomationLog } from './components/AutomationLog'
 import { BootIntro } from './components/BootIntro'
 import { Onboarding } from './components/Onboarding'
 import { DemoPanel } from './components/DemoPanel'
+import { HotkeyOverlay } from './components/HotkeyOverlay'
 import { useAutomationDriver } from './lib/automationDriver'
 import { useOnboarded } from './store'
 
@@ -20,6 +21,7 @@ export default function App() {
       <AgentDrawer />
       <AutomationLog />
       {onboarded && <DemoPanel />}
+      <HotkeyOverlay />
     </>
   )
 }

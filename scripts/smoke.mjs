@@ -131,6 +131,22 @@ async function main() {
     fullPage: false,
   })
 
+  // -------- Phase D: Hotkey overlay ----------
+  // Press ? to open the full shortcuts card
+  await page.keyboard.press('?')
+  await page.waitForTimeout(300)
+  const shortcutsCardVisible = await page
+    .locator('text=Demo Shortcuts')
+    .first()
+    .isVisible()
+    .catch(() => false)
+  await page.screenshot({
+    path: 'scripts/smoke-hotkeys.png',
+    fullPage: false,
+  })
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(200)
+
   await browser.close()
 
   console.log(JSON.stringify({
@@ -141,6 +157,7 @@ async function main() {
     briefingVisible,
     streamingCaught,
     demoPanelVisible,
+    shortcutsCardVisible,
     automationCountText,
     errors,
   }, null, 2))
