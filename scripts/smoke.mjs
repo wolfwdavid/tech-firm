@@ -18,12 +18,31 @@ async function main() {
     if (msg.type() === 'error') errors.push(`console.error: ${msg.text()}`)
   })
 
-  // Clear localStorage so boot intro replays each smoke run
+  // -------- Phase A: visit fresh, capture the onboarding wizard ----------
   await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 20000 })
   await page.evaluate(() => localStorage.clear())
   await page.reload({ waitUntil: 'networkidle', timeout: 20000 })
 
-  // Wait for the boot intro to clear and the React Flow nodes to appear
+  await page.waitForSelector('text=Enter the Crystarium', { timeout: 10000 })
+  await page.screenshot({
+    path: 'scripts/smoke-onboarding-step1.png',
+    fullPage: false,
+  })
+
+  // Click through to step 2
+  await page.locator('button:has-text("Next")').first().click()
+  await page.waitForTimeout(300)
+  // Click through to step 3
+  await page.locator('button:has-text("Next")').first().click()
+  await page.waitForTimeout(300)
+  await page.screenshot({
+    path: 'scripts/smoke-onboarding-step3.png',
+    fullPage: false,
+  })
+  // Final click — enter the Crystarium
+  await page.locator('button:has-text("Enter the Crystarium")').click()
+
+  // -------- Phase B: verify the Crystarium now renders ----------
   await page.waitForSelector('.react-flow__node', { timeout: 15000 })
 
   // Wait for the auto-open Manager drawer to appear (3.1s after mount)

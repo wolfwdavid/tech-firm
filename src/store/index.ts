@@ -16,6 +16,7 @@ import {
   seedNodes,
 } from '../data/seed'
 import { agentDriver, buildRequest } from '../lib/agents'
+import { personalizedActionsFor } from '../lib/personalize'
 
 interface CloneInput {
   parentId: string
@@ -31,6 +32,7 @@ interface CrystariumState {
   automationLog: AutomationEvent[]
   selectedNodeId: string | null
   bootSeen: boolean
+  onboarded: boolean
   pulsingEdgeId: string | null
 
   // actions
@@ -44,6 +46,7 @@ interface CrystariumState {
   addClone: (input: CloneInput) => string
   resetToSeed: () => void
   markBootSeen: () => void
+  completeOnboarding: (business: BusinessSeed, niche: string) => void
 }
 
 const initialState: Pick<
@@ -56,6 +59,7 @@ const initialState: Pick<
   | 'automationLog'
   | 'selectedNodeId'
   | 'bootSeen'
+  | 'onboarded'
   | 'pulsingEdgeId'
 > = {
   business: seedBusiness,
@@ -66,6 +70,7 @@ const initialState: Pick<
   automationLog: [],
   selectedNodeId: null,
   bootSeen: false,
+  onboarded: false,
   pulsingEdgeId: null,
 }
 
@@ -244,10 +249,34 @@ export const useCrystariumStore = create<CrystariumState>()(
       resetToSeed: () => set(initialState),
 
       markBootSeen: () => set({ bootSeen: true }),
+
+      completeOnboarding: (business, niche) => {
+        set((s) => {
+          // refresh each non-clone agent's recentActions to be niche-generic
+          const refreshedAgents: typeof s.agents = { ...s.agents }
+          for (const node of s.nodes) {
+            if (node.parentId) continue
+            const agent = refreshedAgents[node.id]
+            if (!agent) continue
+            const personalized = personalizedActionsFor(node.role, niche)
+            if (personalized.length) {
+              refreshedAgents[node.id] = {
+                ...agent,
+                recentActions: personalized,
+              }
+            }
+          }
+          return {
+            business,
+            agents: refreshedAgents,
+            onboarded: true,
+          }
+        })
+      },
     }),
     {
       name: 'crystarium-v1',
-      version: 1,
+      version: 2,
       partialize: (state) => ({
         business: state.business,
         nodes: state.nodes.map((n) => ({ ...n, status: 'idle' as const })),
@@ -256,12 +285,14 @@ export const useCrystariumStore = create<CrystariumState>()(
         chat: state.chat,
         automationLog: state.automationLog,
         bootSeen: state.bootSeen,
+        onboarded: state.onboarded,
       }),
     },
   ),
 )
 
 export const usePulsingEdgeId = () => useCrystariumStore((s) => s.pulsingEdgeId)
+export const useOnboarded = () => useCrystariumStore((s) => s.onboarded)
 
 // Selectors
 export const useBusiness = () => useCrystariumStore((s) => s.business)
