@@ -72,11 +72,26 @@ async function main() {
   })
 
   // Send a chat message to test the agent loop
+  let streamingCaught = false
   if (briefingVisible) {
     const textarea = page.locator('textarea').first()
     await textarea.fill('What should I prioritize this morning?')
     await textarea.press('Enter')
-    await page.waitForTimeout(1500)
+
+    // Mid-stream screenshot — try to catch the typing caret while text is in flight
+    await page.waitForTimeout(550)
+    streamingCaught = await page
+      .locator('.typing-caret')
+      .first()
+      .isVisible()
+      .catch(() => false)
+    await page.screenshot({
+      path: 'scripts/smoke-screenshot-mid-stream.png',
+      fullPage: false,
+    })
+
+    // Wait for the stream to finish
+    await page.waitForTimeout(1800)
   }
 
   await page.screenshot({
@@ -124,6 +139,7 @@ async function main() {
     brand,
     mrr,
     briefingVisible,
+    streamingCaught,
     demoPanelVisible,
     automationCountText,
     errors,

@@ -68,6 +68,14 @@ body {
   animation: pulse-dot 1.2s ease-in-out infinite;
 }
 
+@keyframes typing-caret-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.15; }
+}
+.typing-caret {
+  animation: typing-caret-blink 0.85s steps(2, end) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;

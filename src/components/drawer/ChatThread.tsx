@@ -9,6 +9,7 @@ interface Props {
   agentName: string
   isThinking: boolean
   emptyHint: string
+  streamingText: string | null
 }
 
 export function ChatThread({
@@ -17,17 +18,19 @@ export function ChatThread({
   agentName,
   isThinking,
   emptyHint,
+  streamingText,
 }: Props) {
   const visual = roleVisuals[role]
   const scrollerRef = useRef<HTMLDivElement>(null)
+  const isStreaming = !!streamingText && streamingText.length > 0
 
   useEffect(() => {
     const el = scrollerRef.current
     if (!el) return
     el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
-  }, [messages.length, isThinking])
+  }, [messages.length, isThinking, streamingText])
 
-  const hasContent = messages.length > 0 || isThinking
+  const hasContent = messages.length > 0 || isThinking || isStreaming
 
   return (
     <div
@@ -87,7 +90,38 @@ export function ChatThread({
           ),
         )}
 
-        {isThinking && (
+        {isStreaming ? (
+          <div className="flex flex-col items-start">
+            <div
+              className="mb-0.5 text-[10px] font-semibold uppercase"
+              style={{ color: visual.bright, letterSpacing: '0.15em' }}
+            >
+              {agentName}
+            </div>
+            <div
+              className="max-w-[88%] rounded-2xl rounded-bl-md px-3.5 py-2 text-[13px]"
+              style={{
+                background: 'rgba(22,24,48,0.85)',
+                color: '#e8e9ff',
+                borderLeft: `2px solid ${visual.bright}`,
+                boxShadow: `0 0 12px ${visual.glow.replace(/[\d.]+\)$/, '0.18)')}`,
+              }}
+            >
+              {streamingText}
+              <span
+                className="typing-caret ml-0.5 inline-block align-baseline"
+                style={{
+                  width: 6,
+                  height: 13,
+                  background: visual.bright,
+                  verticalAlign: 'text-bottom',
+                  boxShadow: `0 0 6px ${visual.glow}`,
+                }}
+                aria-hidden
+              />
+            </div>
+          </div>
+        ) : isThinking ? (
           <div className="flex flex-col items-start">
             <div
               className="mb-0.5 text-[10px] font-semibold uppercase"
@@ -116,7 +150,7 @@ export function ChatThread({
               ))}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )

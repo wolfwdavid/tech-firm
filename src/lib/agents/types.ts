@@ -29,8 +29,19 @@ export interface AgentReplyResult {
   source: 'mock' | 'live'
 }
 
+export interface ReplyOptions {
+  /**
+   * Called with each incremental chunk as the reply is produced. The chunks
+   * concatenated equal the final text. Drivers MAY emit a single chunk equal
+   * to the final text (non-streaming behavior); consumers must handle both.
+   */
+  onPartial?: (chunk: string) => void
+  /** Abort signal — drivers should respect it and stop producing chunks. */
+  signal?: AbortSignal
+}
+
 export interface AgentDriver {
-  reply(req: AgentReplyRequest): Promise<AgentReplyResult>
+  reply(req: AgentReplyRequest, opts?: ReplyOptions): Promise<AgentReplyResult>
 }
 
 /** Convenience: build a request from a store snapshot + the user's typed text. */

@@ -1,9 +1,14 @@
 import { flags } from '../supabase'
 import { mockAgentDriver } from './mockAgent'
 import { liveAgentDriver } from './liveAgent'
-import type { AgentDriver, AgentReplyRequest, AgentReplyResult } from './types'
+import type {
+  AgentDriver,
+  AgentReplyRequest,
+  AgentReplyResult,
+  ReplyOptions,
+} from './types'
 
-export type { AgentReplyRequest, AgentReplyResult, AgentDriver } from './types'
+export type { AgentReplyRequest, AgentReplyResult, AgentDriver, ReplyOptions } from './types'
 export { buildRequest } from './types'
 
 /**
@@ -15,18 +20,25 @@ export { buildRequest } from './types'
  * When VITE_LIVE_AGENTS!=true → mock only. No network call, no fallback machinery.
  */
 export const agentDriver: AgentDriver = {
-  async reply(req: AgentReplyRequest): Promise<AgentReplyResult> {
+  async reply(
+    req: AgentReplyRequest,
+    opts?: ReplyOptions,
+  ): Promise<AgentReplyResult> {
     if (!flags.liveAgents) {
-      return mockAgentDriver.reply(req)
+      return mockAgentDriver.reply(req, opts)
     }
     try {
-      return await liveAgentDriver.reply(req)
+      return await liveAgentDriver.reply(req, opts)
     } catch (err) {
       console.warn(
         '[crystarium] live agent failed; falling back to mock for this turn',
         err,
       )
-      const fallback = await mockAgentDriver.reply(req)
+      // Reset any partial chunks the live attempt emitted by sending a special
+      // empty signal — consumers should reset their typing buffer on fallback.
+      // (Practically the live call fails before any chunk arrived, so this is
+      // a no-op in common cases.)
+      const fallback = await mockAgentDriver.reply(req, opts)
       return { ...fallback, source: 'mock' }
     }
   },

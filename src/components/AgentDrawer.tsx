@@ -7,6 +7,7 @@ import {
   useCrystariumStore,
   useNodes,
   useSelectedNodeId,
+  useStreamingText,
 } from '../store'
 import { roleVisuals } from './nodes/CrystalNode'
 import { RecentActions } from './drawer/RecentActions'
@@ -19,6 +20,7 @@ export function AgentDrawer() {
   const nodes = useNodes()
   const agent = useAgent(selectedNodeId)
   const chat = useChat(selectedNodeId)
+  const streamingText = useStreamingText(selectedNodeId)
   const setSelectedNodeId = useCrystariumStore((s) => s.setSelectedNodeId)
   const sendUserMessage = useCrystariumStore((s) => s.sendUserMessage)
   const addClone = useCrystariumStore((s) => s.addClone)
@@ -123,6 +125,7 @@ export function AgentDrawer() {
             role={node!.role}
             agentName={node!.name}
             isThinking={node!.status === 'thinking'}
+            streamingText={streamingText}
             emptyHint={
               node!.role === 'manager'
                 ? 'Ask your AI CEO what to prioritize this morning.'

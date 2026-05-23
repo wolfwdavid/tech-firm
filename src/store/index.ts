@@ -34,6 +34,8 @@ interface CrystariumState {
   bootSeen: boolean
   onboarded: boolean
   pulsingEdgeId: string | null
+  /** Per-node in-flight streaming text. Not persisted. ChatThread renders this as the typing bubble. */
+  streamingByNodeId: Record<string, string>
 
   // actions
   setSelectedNodeId: (id: string | null) => void
@@ -47,6 +49,8 @@ interface CrystariumState {
   resetToSeed: () => void
   markBootSeen: () => void
   completeOnboarding: (business: BusinessSeed, niche: string) => void
+  appendStreamChunk: (nodeId: string, chunk: string) => void
+  clearStreamBuffer: (nodeId: string) => void
 }
 
 const initialState: Pick<
@@ -61,6 +65,7 @@ const initialState: Pick<
   | 'bootSeen'
   | 'onboarded'
   | 'pulsingEdgeId'
+  | 'streamingByNodeId'
 > = {
   business: seedBusiness,
   nodes: seedNodes,
@@ -72,6 +77,7 @@ const initialState: Pick<
   bootSeen: false,
   onboarded: false,
   pulsingEdgeId: null,
+  streamingByNodeId: {},
 }
 
 let idCounter = 0
@@ -138,12 +144,35 @@ export const useCrystariumStore = create<CrystariumState>()(
         }
       },
 
+      appendStreamChunk: (nodeId, chunk) =>
+        set((s) => ({
+          streamingByNodeId: {
+            ...s.streamingByNodeId,
+            [nodeId]: (s.streamingByNodeId[nodeId] ?? '') + chunk,
+          },
+        })),
+
+      clearStreamBuffer: (nodeId) =>
+        set((s) => {
+          if (!(nodeId in s.streamingByNodeId)) return {}
+          const next = { ...s.streamingByNodeId }
+          delete next[nodeId]
+          return { streamingByNodeId: next }
+        }),
+
       sendUserMessage: async (nodeId, text) => {
         const trimmed = text.trim()
         if (!trimmed) return
-        const { appendChat, setNodeStatus, appendRecentAction } = get()
+        const {
+          appendChat,
+          setNodeStatus,
+          appendRecentAction,
+          appendStreamChunk,
+          clearStreamBuffer,
+        } = get()
         appendChat({ nodeId, from: 'user', text: trimmed })
         setNodeStatus(nodeId, 'thinking')
+        clearStreamBuffer(nodeId)
 
         const state = get()
         const agent = state.agents[nodeId]
@@ -168,14 +197,36 @@ export const useCrystariumStore = create<CrystariumState>()(
               trimmed,
               state.business,
             ),
+            {
+              onPartial: (chunk) => appendStreamChunk(nodeId, chunk),
+            },
           )
-          appendChat({ nodeId, from: 'agent', text: result.text })
+          // Commit the final message + clear the buffer atomically so the UI swaps
+          // from "agent typing" to "agent message" in a single render.
+          set((s) => {
+            const nextStreaming = { ...s.streamingByNodeId }
+            delete nextStreaming[nodeId]
+            return {
+              chat: [
+                ...s.chat,
+                {
+                  id: nextId('m'),
+                  ts: Date.now(),
+                  nodeId,
+                  from: 'agent',
+                  text: result.text,
+                },
+              ],
+              streamingByNodeId: nextStreaming,
+            }
+          })
           appendRecentAction(
             nodeId,
             `Replied: "${trimmed.length > 40 ? trimmed.slice(0, 40) + '…' : trimmed}"`,
           )
         } catch (err) {
           console.error('[crystarium] agent reply failed', err)
+          clearStreamBuffer(nodeId)
           appendChat({
             nodeId,
             from: 'agent',
@@ -294,6 +345,10 @@ export const useCrystariumStore = create<CrystariumState>()(
 
 export const usePulsingEdgeId = () => useCrystariumStore((s) => s.pulsingEdgeId)
 export const useOnboarded = () => useCrystariumStore((s) => s.onboarded)
+export const useStreamingText = (nodeId: string | null) =>
+  useCrystariumStore((s) =>
+    nodeId ? s.streamingByNodeId[nodeId] ?? null : null,
+  )
 
 // Selectors
 export const useBusiness = () => useCrystariumStore((s) => s.business)
