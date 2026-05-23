@@ -17,9 +17,13 @@ import type { NodeRole } from '../store/types'
  */
 export function useRealtimeAutomations() {
   useEffect(() => {
+    const setStatus = useCrystariumStore.getState().setRealtimeStatus
     if (!flags.remoteAutomations || !supabase) {
+      setStatus('idle')
       return
     }
+
+    setStatus('connecting')
 
     const channel = supabase
       .channel('crystarium-automation-events')
@@ -51,13 +55,18 @@ export function useRealtimeAutomations() {
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           console.info('[crystarium] subscribed to remote automation_events')
-        } else if (status === 'CHANNEL_ERROR') {
+          setStatus('live')
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           console.warn('[crystarium] realtime channel error; local driver still running')
+          setStatus('error')
+        } else if (status === 'CLOSED') {
+          setStatus('idle')
         }
       })
 
     return () => {
       void supabase!.removeChannel(channel)
+      setStatus('idle')
     }
   }, [])
 }

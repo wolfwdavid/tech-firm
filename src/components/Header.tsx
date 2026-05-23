@@ -1,5 +1,5 @@
 import { Sparkles, RotateCcw } from 'lucide-react'
-import { useBusiness, useCrystariumStore } from '../store'
+import { useBusiness, useCrystariumStore, useRealtimeStatus } from '../store'
 
 function formatMoney(n: number): string {
   return `$${n.toLocaleString()}`
@@ -29,7 +29,7 @@ export function Header() {
         borderBottom: '1px solid rgba(160,180,255,0.18)',
       }}
     >
-      {/* Left: brand */}
+      {/* Left: brand + live indicator */}
       <div className="flex items-center gap-3">
         <div
           className="flex h-8 w-8 items-center justify-center rounded-full"
@@ -61,6 +61,7 @@ export function Header() {
             One-person AI business · Crystarium
           </div>
         </div>
+        <LiveIndicator />
       </div>
 
       {/* Right: KPI cluster */}
@@ -118,5 +119,49 @@ function Divider() {
       style={{ background: 'rgba(255,255,255,0.08)' }}
       aria-hidden
     />
+  )
+}
+
+function LiveIndicator() {
+  const status = useRealtimeStatus()
+  const map = {
+    idle: { label: 'Local', color: '#5b5d80', dot: '#5b5d80', pulse: false },
+    connecting: { label: 'Connecting', color: '#f5c45e', dot: '#f5c45e', pulse: true },
+    live: { label: 'Live', color: '#5fdba0', dot: '#5fdba0', pulse: true },
+    error: { label: 'Offline', color: '#f06a6a', dot: '#f06a6a', pulse: false },
+  }
+  const cfg = map[status]
+  return (
+    <div
+      className="ml-2 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase"
+      title={
+        status === 'live'
+          ? 'Subscribed to Supabase Realtime — storefront events pulse live'
+          : status === 'idle'
+            ? 'Running on the local timer driver — no remote bus configured'
+            : status === 'connecting'
+              ? 'Connecting to Supabase Realtime…'
+              : 'Remote bus error — falling back to local driver'
+      }
+      style={{
+        background: 'rgba(10,11,26,0.6)',
+        border: `1px solid ${cfg.color}33`,
+        color: cfg.color,
+        letterSpacing: '0.16em',
+      }}
+    >
+      <span
+        className="inline-block rounded-full"
+        style={{
+          width: 6,
+          height: 6,
+          background: cfg.dot,
+          boxShadow: cfg.pulse ? `0 0 8px ${cfg.dot}` : 'none',
+          animation: cfg.pulse ? 'live-dot-pulse 1.6s ease-in-out infinite' : 'none',
+        }}
+        aria-hidden
+      />
+      {cfg.label}
+    </div>
   )
 }

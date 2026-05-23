@@ -36,6 +36,8 @@ interface CrystariumState {
   pulsingEdgeId: string | null
   /** Per-node in-flight streaming text. Not persisted. ChatThread renders this as the typing bubble. */
   streamingByNodeId: Record<string, string>
+  /** Supabase Realtime connection state. Shown as the LIVE/LOCAL pill in the header. */
+  realtimeStatus: 'idle' | 'connecting' | 'live' | 'error'
 
   // actions
   setSelectedNodeId: (id: string | null) => void
@@ -51,6 +53,7 @@ interface CrystariumState {
   completeOnboarding: (business: BusinessSeed, niche: string) => void
   appendStreamChunk: (nodeId: string, chunk: string) => void
   clearStreamBuffer: (nodeId: string) => void
+  setRealtimeStatus: (status: CrystariumState['realtimeStatus']) => void
 }
 
 const initialState: Pick<
@@ -66,6 +69,7 @@ const initialState: Pick<
   | 'onboarded'
   | 'pulsingEdgeId'
   | 'streamingByNodeId'
+  | 'realtimeStatus'
 > = {
   business: seedBusiness,
   nodes: seedNodes,
@@ -78,6 +82,7 @@ const initialState: Pick<
   onboarded: false,
   pulsingEdgeId: null,
   streamingByNodeId: {},
+  realtimeStatus: 'idle',
 }
 
 let idCounter = 0
@@ -159,6 +164,8 @@ export const useCrystariumStore = create<CrystariumState>()(
           delete next[nodeId]
           return { streamingByNodeId: next }
         }),
+
+      setRealtimeStatus: (status) => set({ realtimeStatus: status }),
 
       sendUserMessage: async (nodeId, text) => {
         const trimmed = text.trim()
@@ -349,6 +356,7 @@ export const useStreamingText = (nodeId: string | null) =>
   useCrystariumStore((s) =>
     nodeId ? s.streamingByNodeId[nodeId] ?? null : null,
   )
+export const useRealtimeStatus = () => useCrystariumStore((s) => s.realtimeStatus)
 
 // Selectors
 export const useBusiness = () => useCrystariumStore((s) => s.business)

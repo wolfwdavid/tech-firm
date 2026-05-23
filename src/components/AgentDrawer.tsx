@@ -162,6 +162,12 @@ function DrawerHeader({
 }) {
   const v = roleVisuals[node.role]
   const Icon = v.icon
+  // For clones, the seeded name is "Parent · specialization". Split it back out
+  // so the header shows the parent name as the title and the specialization as a chip.
+  const isClone = !!node.specialization
+  const displayName = isClone
+    ? node.name.split(' · ')[0]
+    : node.name
   return (
     <div
       className="relative flex items-center gap-3 px-5"
@@ -182,18 +188,34 @@ function DrawerHeader({
       >
         <Icon size={18} color="rgba(255,255,255,0.95)" strokeWidth={1.8} />
       </div>
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <div
           className="text-[10px] font-medium uppercase"
           style={{ color: v.bright, letterSpacing: '0.22em' }}
         >
-          Crystarium · Agent
+          Crystarium · {isClone ? 'Specialist' : 'Agent'}
         </div>
-        <div
-          className="text-[16px] font-semibold"
-          style={{ color: '#e8e9ff', letterSpacing: '0.02em' }}
-        >
-          {node.name}
+        <div className="flex items-center gap-1.5">
+          <div
+            className="truncate text-[16px] font-semibold"
+            style={{ color: '#e8e9ff', letterSpacing: '0.02em' }}
+          >
+            {displayName}
+          </div>
+          {isClone && (
+            <span
+              className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-semibold uppercase"
+              style={{
+                background: `${v.glow}`,
+                color: '#e8e9ff',
+                border: `1px solid ${v.bright}66`,
+                letterSpacing: '0.10em',
+              }}
+              title={`Cloned from ${displayName} with focus: ${node.specialization}`}
+            >
+              {node.specialization}
+            </span>
+          )}
         </div>
       </div>
       <button
