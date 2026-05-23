@@ -34,6 +34,8 @@ interface CrystariumState {
   bootSeen: boolean
   onboarded: boolean
   pulsingEdgeId: string | null
+  /** Label of the currently pulsing edge — surfaced as a floating tag near the edge midpoint. */
+  pulsingEdgeLabel: string | null
   /** Per-node in-flight streaming text. Not persisted. ChatThread renders this as the typing bubble. */
   streamingByNodeId: Record<string, string>
   /** Supabase Realtime connection state. Shown as the LIVE/LOCAL pill in the header. */
@@ -68,6 +70,7 @@ const initialState: Pick<
   | 'bootSeen'
   | 'onboarded'
   | 'pulsingEdgeId'
+  | 'pulsingEdgeLabel'
   | 'streamingByNodeId'
   | 'realtimeStatus'
 > = {
@@ -81,6 +84,7 @@ const initialState: Pick<
   bootSeen: false,
   onboarded: false,
   pulsingEdgeId: null,
+  pulsingEdgeLabel: null,
   streamingByNodeId: {},
   realtimeStatus: 'idle',
 }
@@ -132,21 +136,51 @@ export const useCrystariumStore = create<CrystariumState>()(
 
       fireAutomation: (fromNodeId, toNodeId, label) => {
         const { edges, logAutomation } = get()
-        const edge = edges.find(
-          (e) =>
-            (e.source === fromNodeId && e.target === toNodeId) ||
-            (e.source === toNodeId && e.target === fromNodeId),
-        )
         logAutomation({ fromNodeId, toNodeId, label })
-        if (edge) {
-          set({ pulsingEdgeId: edge.id })
+
+        // helper: find an edge that connects two nodes (either direction)
+        const connects = (
+          a: string,
+          b: string,
+        ): EdgeData | undefined =>
+          edges.find(
+            (e) =>
+              (e.source === a && e.target === b) ||
+              (e.source === b && e.target === a),
+          )
+
+        // helper: pulse one edge with the given label for `durationMs`
+        const pulse = (edgeId: string, lbl: string, durationMs = 1500) => {
+          set({ pulsingEdgeId: edgeId, pulsingEdgeLabel: lbl })
           setTimeout(() => {
-            // Only clear if it's still the same pulse
-            if (get().pulsingEdgeId === edge.id) {
-              set({ pulsingEdgeId: null })
+            if (get().pulsingEdgeId === edgeId) {
+              set({ pulsingEdgeId: null, pulsingEdgeLabel: null })
             }
-          }, 1600)
+          }, durationMs)
         }
+
+        // Try direct edge first
+        const direct = connects(fromNodeId, toNodeId)
+        if (direct) {
+          pulse(direct.id, label)
+          return
+        }
+
+        // 2-hop pathfinding: find any node that bridges from → mid → to
+        const { nodes } = get()
+        for (const mid of nodes) {
+          if (mid.id === fromNodeId || mid.id === toNodeId) continue
+          const a = connects(fromNodeId, mid.id)
+          const b = connects(mid.id, toNodeId)
+          if (a && b) {
+            // First hop carries the label; second hop continues silently
+            // (label stays on the chain via the active leg)
+            pulse(a.id, label, 1400)
+            setTimeout(() => pulse(b.id, label, 1300), 700)
+            return
+          }
+        }
+        // No path — log row already added; no visible pulse.
       },
 
       appendStreamChunk: (nodeId, chunk) =>
@@ -351,6 +385,7 @@ export const useCrystariumStore = create<CrystariumState>()(
 )
 
 export const usePulsingEdgeId = () => useCrystariumStore((s) => s.pulsingEdgeId)
+export const usePulsingEdgeLabel = () => useCrystariumStore((s) => s.pulsingEdgeLabel)
 export const useOnboarded = () => useCrystariumStore((s) => s.onboarded)
 export const useStreamingText = (nodeId: string | null) =>
   useCrystariumStore((s) =>

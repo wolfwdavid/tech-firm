@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import {
   BaseEdge,
+  EdgeLabelRenderer,
   getBezierPath,
   type EdgeProps,
 } from 'reactflow'
@@ -11,6 +12,8 @@ export interface CrystalEdgeData {
   sourceRole: NodeRole
   targetRole: NodeRole
   pulse?: boolean
+  /** Set only on the actively-pulsing edge — surfaced as a floating tag at the midpoint. */
+  label?: string
 }
 
 function CrystalEdgeImpl({
@@ -23,7 +26,7 @@ function CrystalEdgeImpl({
   targetPosition,
   data,
 }: EdgeProps<CrystalEdgeData>) {
-  const [path] = getBezierPath({
+  const [path, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     targetX,
@@ -101,6 +104,34 @@ function CrystalEdgeImpl({
           strokeWidth={3}
           style={{ mixBlendMode: 'screen' }}
         />
+      )}
+      {pulse && data?.label && (
+        <EdgeLabelRenderer>
+          <div
+            className="edge-pulse-label"
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: 'none',
+              padding: '5px 10px',
+              borderRadius: 999,
+              background: 'rgba(10,11,26,0.92)',
+              border: `1px solid ${targetColor}88`,
+              boxShadow: `0 0 16px ${targetColor}55`,
+              color: '#e8e9ff',
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.04em',
+              whiteSpace: 'nowrap',
+              maxWidth: 260,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              backdropFilter: 'blur(6px)',
+            }}
+          >
+            {data.label}
+          </div>
+        </EdgeLabelRenderer>
       )}
     </>
   )

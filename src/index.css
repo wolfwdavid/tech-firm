@@ -81,6 +81,8 @@ body {
   50% { opacity: 0.55; transform: scale(1.18); }
 }
 
+/* Edge label fade is animated via Framer Motion in CrystalEdge.tsx; no CSS keyframe here. */
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;

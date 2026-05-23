@@ -106,7 +106,19 @@ async function main() {
     if (afterCount > beforeCount) break
   }
 
-  // Phase E: open the log to verify the label landed
+  // Phase E: capture the moment of the pulse — edge label visible as a floating pill
+  // Re-insert a fresh row and screenshot quickly while the pulse window is open
+  const pulseLabel = `Edge label test ${Date.now()}`
+  await insertEvent(supaUrl, supaKey, pulseLabel)
+  await page.waitForTimeout(400)
+  const edgeLabelVisible = await page
+    .locator(`text=${pulseLabel}`)
+    .first()
+    .isVisible()
+    .catch(() => false)
+  await page.screenshot({ path: 'scripts/smoke-edge-label.png', fullPage: false })
+
+  // Then open the log to verify the original label landed
   await page.locator('button:has-text("Automations")').click()
   await page.waitForTimeout(400)
   const labelVisible = await page.locator(`text=${label}`).first().isVisible().catch(() => false)
@@ -120,6 +132,7 @@ async function main() {
         beforeCount,
         afterCount,
         delta: afterCount - beforeCount,
+        edgeLabelVisible,
         labelVisible,
         insertedId: inserted?.id,
         subscribeMessages,
