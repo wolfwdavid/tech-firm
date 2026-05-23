@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
+
 	type Tier = {
 		id: 'single-origin' | 'house-blend' | 'roasters-choice';
 		name: string;
@@ -52,6 +54,31 @@
 		}
 	];
 
+	type FormResult = {
+		success?: boolean;
+		email?: string;
+		tierLabel?: string;
+		eventWritten?: boolean;
+		eventError?: string | null;
+		emailSent?: boolean;
+		emailError?: string | null;
+		error?: string;
+	};
+
+	let { form }: { form: FormResult | null } = $props();
+
+	let selectedTier = $state<Tier | null>(null);
+	let submitting = $state(false);
+
+	function openModal(tier: Tier) {
+		selectedTier = tier;
+	}
+
+	function closeModal() {
+		selectedTier = null;
+		submitting = false;
+	}
+
 	function accentBorder(accent: Tier['accent']) {
 		return {
 			email: 'border-role-email/40 hover:border-role-email/80',
@@ -78,8 +105,7 @@
 
 	function accentButton(accent: Tier['accent']) {
 		return {
-			email:
-				'bg-role-email/10 border border-role-email/60 text-role-email hover:bg-role-email/20',
+			email: 'bg-role-email/10 border border-role-email/60 text-role-email hover:bg-role-email/20',
 			manager:
 				'bg-role-manager/10 border border-role-manager/60 text-role-manager hover:bg-role-manager/20',
 			automations:
@@ -87,9 +113,20 @@
 		}[accent];
 	}
 
-	function subscribe(tier: Tier) {
-		// Wired in task #4 — for now, soft acknowledgement so the button feels alive.
-		alert(`${tier.name} — Supabase signup wire-up is in progress.`);
+	function accentBadge(accent: Tier['accent']) {
+		return {
+			email: 'bg-role-email/15 text-role-email border-role-email/40',
+			manager: 'bg-role-manager/15 text-role-manager border-role-manager/40',
+			automations: 'bg-role-automations/15 text-role-automations border-role-automations/40'
+		}[accent];
+	}
+
+	function accentRing(accent: Tier['accent']) {
+		return {
+			email: 'focus:border-role-email focus:ring-role-email/40',
+			manager: 'focus:border-role-manager focus:ring-role-manager/40',
+			automations: 'focus:border-role-automations focus:ring-role-automations/40'
+		}[accent];
 	}
 </script>
 
@@ -141,8 +178,9 @@
 			>
 				{#if tier.featured}
 					<span
-						class="bg-role-storefront/15 text-role-storefront border-role-storefront/40 absolute -top-3 left-8 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[var(--tracking-widest)]"
-						>Most chosen</span
+						class="absolute -top-3 left-8 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[var(--tracking-widest)] {accentBadge(
+							tier.accent
+						)}">Most chosen</span
 					>
 				{/if}
 
@@ -167,7 +205,7 @@
 
 				<button
 					type="button"
-					onclick={() => subscribe(tier)}
+					onclick={() => openModal(tier)}
 					class="w-full rounded-lg px-5 py-3 text-sm font-medium uppercase tracking-[var(--tracking-widest)] transition-colors duration-200 {accentButton(
 						tier.accent
 					)}"
@@ -184,3 +222,154 @@
 		</p>
 	</footer>
 </div>
+
+{#if selectedTier}
+	{@const tier = selectedTier}
+	<div
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="subscribe-title"
+		class="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+	>
+		<button
+			type="button"
+			aria-label="Close"
+			onclick={closeModal}
+			class="bg-void/80 absolute inset-0 backdrop-blur-sm"
+		></button>
+
+		<div
+			class="bg-deep border-border-glow relative w-full max-w-md rounded-2xl border p-8 {accentGlow(
+				tier.accent
+			)}"
+		>
+			<button
+				type="button"
+				onclick={closeModal}
+				aria-label="Close"
+				class="text-text-muted hover:text-text-primary absolute right-4 top-4 text-xl leading-none"
+				>×</button
+			>
+
+			{#if form?.success && form.tierLabel}
+				<header class="mb-4">
+					<p
+						class="text-role-manager mb-2 text-xs uppercase tracking-[var(--tracking-mystic)]"
+					>
+						Welcome to {form.tierLabel}
+					</p>
+					<h2 id="subscribe-title" class="font-display text-text-primary text-2xl">
+						You're in.
+					</h2>
+				</header>
+				<p class="text-text-secondary text-sm leading-relaxed">
+					A confirmation is on its way to <span class="text-text-primary">{form.email}</span>.
+					Your agents are being tuned right now — your first decision brief will arrive within
+					24 hours.
+				</p>
+				{#if form.eventError || form.emailError}
+					<details class="text-text-muted mt-4 text-xs">
+						<summary class="cursor-pointer">Demo diagnostics</summary>
+						<ul class="mt-2 space-y-1">
+							<li>
+								Automation event:
+								{form.eventWritten ? 'written ✓' : `skipped — ${form.eventError}`}
+							</li>
+							<li>
+								Welcome email: {form.emailSent ? 'sent ✓' : `skipped — ${form.emailError}`}
+							</li>
+						</ul>
+					</details>
+				{/if}
+				<button
+					type="button"
+					onclick={closeModal}
+					class="mt-8 w-full rounded-lg px-5 py-3 text-sm font-medium uppercase tracking-[var(--tracking-widest)] {accentButton(
+						tier.accent
+					)}"
+				>
+					Done
+				</button>
+			{:else}
+				<header class="mb-6">
+					<p
+						class="{accentText(
+							tier.accent
+						)} mb-2 text-xs uppercase tracking-[var(--tracking-mystic)]"
+					>
+						{tier.name} · ${tier.priceMonthly}/mo
+					</p>
+					<h2 id="subscribe-title" class="font-display text-text-primary text-2xl">
+						Start your subscription
+					</h2>
+				</header>
+
+				<form
+					method="POST"
+					action="?/subscribe"
+					use:enhance={() => {
+						submitting = true;
+						return async ({ update }) => {
+							await update({ reset: false });
+							submitting = false;
+						};
+					}}
+					class="space-y-4"
+				>
+					<input type="hidden" name="tier" value={tier.id} />
+
+					<label class="block">
+						<span
+							class="text-text-muted block text-xs uppercase tracking-[var(--tracking-widest)]"
+							>Email</span
+						>
+						<input
+							type="email"
+							name="email"
+							required
+							autocomplete="email"
+							placeholder="you@yourdomain.com"
+							class="bg-surface-1 border-border-faint text-text-primary placeholder:text-text-muted mt-2 w-full rounded-lg border px-4 py-3 text-sm outline-none focus:ring-2 {accentRing(
+								tier.accent
+							)}"
+						/>
+					</label>
+
+					<label class="block">
+						<span
+							class="text-text-muted block text-xs uppercase tracking-[var(--tracking-widest)]"
+							>Name (optional)</span
+						>
+						<input
+							type="text"
+							name="name"
+							autocomplete="name"
+							placeholder="What should your agents call you?"
+							class="bg-surface-1 border-border-faint text-text-primary placeholder:text-text-muted mt-2 w-full rounded-lg border px-4 py-3 text-sm outline-none focus:ring-2 {accentRing(
+								tier.accent
+							)}"
+						/>
+					</label>
+
+					{#if form?.error}
+						<p class="text-role-content text-xs">{form.error}</p>
+					{/if}
+
+					<button
+						type="submit"
+						disabled={submitting}
+						class="w-full rounded-lg px-5 py-3 text-sm font-medium uppercase tracking-[var(--tracking-widest)] transition-colors duration-200 disabled:opacity-50 {accentButton(
+							tier.accent
+						)}"
+					>
+						{submitting ? 'Tuning your agents…' : `Subscribe to ${tier.name}`}
+					</button>
+
+					<p class="text-text-muted text-center text-xs">
+						No card on file yet — payment wires up in v2.1.
+					</p>
+				</form>
+			{/if}
+		</div>
+	</div>
+{/if}
