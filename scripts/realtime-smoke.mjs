@@ -11,7 +11,7 @@
 import { chromium } from 'playwright'
 import { readFileSync } from 'fs'
 
-const URL = 'http://localhost:5173/'
+const URL = process.env.SMOKE_URL || 'http://localhost:5173/'
 
 function loadEnv() {
   const env = {}
