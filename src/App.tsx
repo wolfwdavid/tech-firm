@@ -7,10 +7,12 @@ import { Onboarding } from './components/Onboarding'
 import { DemoPanel } from './components/DemoPanel'
 import { HotkeyOverlay } from './components/HotkeyOverlay'
 import { useAutomationDriver } from './lib/automationDriver'
+import { useRealtimeAutomations } from './lib/realtimeAutomations'
 import { useOnboarded } from './store'
 
 export default function App() {
   const onboarded = useOnboarded()
+  useRealtimeAutomations()
   useAutomationDriver()
   return (
     <>

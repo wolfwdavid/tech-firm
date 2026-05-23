@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useCrystariumStore } from '../store'
+import { isRemoteAutomationsActive } from './realtimeAutomations'
 
 type Pair = [from: string, to: string, label: string]
 
@@ -48,6 +49,13 @@ function schedule(prevFrom: string | null) {
 
 export function useAutomationDriver() {
   useEffect(() => {
+    // When the remote Realtime listener is active, real storefront events drive the pulses
+    // — local timer would just add noise. Skip cleanly.
+    if (isRemoteAutomationsActive()) {
+      console.info('[crystarium] local automation driver paused — remote bus is the source')
+      return
+    }
+
     mountedCount++
     if (mountedCount > 1) {
       // strict-mode double-mount in dev — only one driver
