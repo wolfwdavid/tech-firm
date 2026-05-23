@@ -84,6 +84,38 @@ async function main() {
     fullPage: false,
   })
 
+  // -------- Phase C: Demo panel + fake customer ----------
+  // Close drawer to access the Demo panel in its bottom-right position
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(400)
+
+  // Open the demo panel via hotkey
+  await page.keyboard.down('Shift')
+  await page.keyboard.press('D')
+  await page.keyboard.up('Shift')
+  await page.waitForTimeout(300)
+
+  const demoPanelVisible = await page
+    .locator('text=Demo Controls')
+    .first()
+    .isVisible()
+    .catch(() => false)
+
+  // Fire scenario #1 via hotkey
+  await page.keyboard.press('1')
+  await page.waitForTimeout(600)
+
+  // Read the automation log count from the collapsed pill
+  const automationCountText = await page
+    .locator('button:has-text("Automations")')
+    .innerText()
+    .catch(() => '')
+
+  await page.screenshot({
+    path: 'scripts/smoke-demo-panel.png',
+    fullPage: false,
+  })
+
   await browser.close()
 
   console.log(JSON.stringify({
@@ -92,6 +124,8 @@ async function main() {
     brand,
     mrr,
     briefingVisible,
+    demoPanelVisible,
+    automationCountText,
     errors,
   }, null, 2))
 

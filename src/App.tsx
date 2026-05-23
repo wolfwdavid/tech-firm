@@ -4,6 +4,7 @@ import { AgentDrawer } from './components/AgentDrawer'
 import { AutomationLog } from './components/AutomationLog'
 import { BootIntro } from './components/BootIntro'
 import { Onboarding } from './components/Onboarding'
+import { DemoPanel } from './components/DemoPanel'
 import { useAutomationDriver } from './lib/automationDriver'
 import { useOnboarded } from './store'
 
@@ -18,6 +19,7 @@ export default function App() {
       <Crystarium />
       <AgentDrawer />
       <AutomationLog />
+      {onboarded && <DemoPanel />}
     </>
   )
 }
