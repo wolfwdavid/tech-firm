@@ -110,7 +110,13 @@ export default defineConfig(({ mode }) => {
   for (const [k, v] of Object.entries(env)) {
     if (!(k in process.env)) process.env[k] = v
   }
+
+  // GitHub Pages serves the repo at /<repo-name>/ — set base so asset URLs resolve.
+  // Override with VITE_BASE='/' for root-domain hosts (Vercel, custom domain).
+  const base = env.VITE_BASE ?? (mode === 'production' ? '/tech-firm/' : '/')
+
   return {
+    base,
     plugins: [react(), devChatApi()],
     server: { port: 5173, open: false },
   }
