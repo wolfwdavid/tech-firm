@@ -1,5 +1,5 @@
-import { Sparkles } from 'lucide-react'
-import { useBusiness } from '../store'
+import { Sparkles, RotateCcw } from 'lucide-react'
+import { useBusiness, useCrystariumStore } from '../store'
 
 function formatMoney(n: number): string {
   return `$${n.toLocaleString()}`
@@ -7,6 +7,19 @@ function formatMoney(n: number): string {
 
 export function Header() {
   const business = useBusiness()
+  const resetToSeed = useCrystariumStore((s) => s.resetToSeed)
+
+  const handleReset = () => {
+    if (window.confirm('Reset the Crystarium to its seed state? (Clones, chat, and automations will clear.)')) {
+      resetToSeed()
+      try {
+        localStorage.removeItem('crystarium-v1')
+      } catch {
+        // ignore
+      }
+      window.location.reload()
+    }
+  }
 
   return (
     <header
@@ -57,6 +70,16 @@ export function Header() {
         <Kpi label="Customers" value={business.customerCount.toString()} accent="#4fd0e8" />
         <Divider />
         <Kpi label="Today" value={business.todayActivity.toString()} accent="#f5c45e" />
+        <Divider />
+        <button
+          onClick={handleReset}
+          aria-label="Reset demo"
+          title="Reset demo"
+          className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-white/5"
+          style={{ color: '#5b5d80' }}
+        >
+          <RotateCcw size={13} />
+        </button>
       </div>
     </header>
   )
