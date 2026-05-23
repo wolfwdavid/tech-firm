@@ -13,14 +13,14 @@
 		{
 			id: 'single-origin',
 			name: 'Single Origin',
-			tagline: 'One bean, one farm, one month.',
+			tagline: 'One agent, one focus, one month.',
 			priceMonthly: 18,
 			accent: 'email',
 			features: [
-				'250g of one rotating single-origin bean',
-				'Shipped the day it is roasted',
-				'Tasting card with farm & process notes',
-				'Pause or skip any month'
+				'One specialized AI agent, tuned to your top focus area',
+				'Up to 50 decisions per month with plain-language reasoning',
+				'Onboarding interview shapes the agent to how you think',
+				'Pause or cancel any month'
 			]
 		},
 		{
@@ -31,23 +31,23 @@
 			accent: 'manager',
 			featured: true,
 			features: [
-				'350g of our signature seasonal blend',
-				'Two grind options: whole-bean or filter',
-				'Companion brew guide refreshed monthly',
-				'Free shipping inside the lower 48'
+				'Three AI agents collaborating across your domains',
+				'Shared context — each agent sees what the others decided',
+				'Unlimited decisions with priority response times',
+				'Weekly briefing of every decision your agents made for you'
 			]
 		},
 		{
 			id: 'roasters-choice',
 			name: "Roaster's Choice",
-			tagline: 'For the people who keep their grinder dialed.',
+			tagline: 'For people running their stack on autopilot.',
 			priceMonthly: 48,
 			accent: 'automations',
 			features: [
-				'500g curated by the roaster — anything goes',
-				'Includes one experimental / micro-lot per quarter',
-				'Early access to limited releases',
-				'Private monthly Q&A with the roaster'
+				'A custom roster of agents, shaped to your business or life',
+				'Bring-your-own-model: Claude, GPT, or local — your call',
+				'Early access to new agent capabilities and integrations',
+				'Monthly 1:1 with the architect who tunes your roster'
 			]
 		}
 	];
@@ -126,9 +126,9 @@
 			<span class="text-role-manager italic">Decided</span> for you.
 		</h1>
 		<p class="text-text-secondary mt-6 text-lg leading-relaxed">
-			Every month, a 250–500g bag chosen by the roaster, shipped the day it's roasted, paired with
-			brewing notes written in plain language. The whole operation runs from one laptop and a
-			handful of specialized agents.
+			Each month, a hand-picked set of decisions made on your behalf — by specialized AI agents
+			tuned to how you think — delivered with plain-language reasoning. The whole operation runs
+			from one laptop and a handful of specialized agents.
 		</p>
 	</section>
 
