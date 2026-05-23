@@ -15,7 +15,7 @@ import {
   seedEdges,
   seedNodes,
 } from '../data/seed'
-import { pickResponse } from '../lib/responseMatcher'
+import { agentDriver, buildRequest } from '../lib/agents'
 
 interface CloneInput {
   parentId: string
@@ -40,7 +40,7 @@ interface CrystariumState {
   appendRecentAction: (nodeId: string, text: string) => void
   logAutomation: (evt: Omit<AutomationEvent, 'id' | 'ts'>) => void
   fireAutomation: (fromNodeId: string, toNodeId: string, label: string) => void
-  sendUserMessage: (nodeId: string, text: string) => void
+  sendUserMessage: (nodeId: string, text: string) => Promise<void>
   addClone: (input: CloneInput) => string
   resetToSeed: () => void
   markBootSeen: () => void
@@ -133,49 +133,68 @@ export const useCrystariumStore = create<CrystariumState>()(
         }
       },
 
-      sendUserMessage: (nodeId, text) => {
+      sendUserMessage: async (nodeId, text) => {
         const trimmed = text.trim()
         if (!trimmed) return
         const { appendChat, setNodeStatus, appendRecentAction } = get()
         appendChat({ nodeId, from: 'user', text: trimmed })
         setNodeStatus(nodeId, 'thinking')
-        const delay = 700 + Math.random() * 400
-        setTimeout(() => {
-          const state = get()
-          const agent = state.agents[nodeId]
-          if (!agent) {
-            setNodeStatus(nodeId, 'idle')
-            return
-          }
-          const recentAgentMsgs = state.chat
-            .filter((m) => m.nodeId === nodeId && m.from === 'agent')
-            .slice(-3)
-            .map((m) => m.text)
-          const reply = pickResponse(trimmed, agent.cannedResponses, recentAgentMsgs)
-          appendChat({ nodeId, from: 'agent', text: reply })
+
+        const state = get()
+        const agent = state.agents[nodeId]
+        const node = state.nodes.find((n) => n.id === nodeId)
+        if (!agent || !node) {
+          setNodeStatus(nodeId, 'idle')
+          return
+        }
+
+        const history = state.chat
+          .filter((m) => m.nodeId === nodeId)
+          .map((m) => ({ from: m.from, text: m.text }))
+
+        try {
+          const result = await agentDriver.reply(
+            buildRequest(
+              agent,
+              node.role,
+              node.name,
+              node.specialization,
+              history,
+              trimmed,
+            ),
+          )
+          appendChat({ nodeId, from: 'agent', text: result.text })
           appendRecentAction(
             nodeId,
             `Replied: "${trimmed.length > 40 ? trimmed.slice(0, 40) + '…' : trimmed}"`,
           )
+        } catch (err) {
+          console.error('[crystarium] agent reply failed', err)
+          appendChat({
+            nodeId,
+            from: 'agent',
+            text: '(I lost my thread for a second — try that again?)',
+          })
+        } finally {
           setNodeStatus(nodeId, 'idle')
+        }
 
-          // Phase 3 hook: chat-triggered automation
-          const triggerMap: Record<string, [string, string]> = {
-            'node-storefront': ['node-content', 'Storefront → Content: idea queued'],
-            'node-customer': ['node-email', 'Customer → Email: nurture queued'],
-            'node-email': ['node-payments', 'Email → Payments: receipt sync'],
-            'node-content': ['node-email', 'Content → Email: campaign asset ready'],
-            'node-payments': ['node-analytics', 'Payments → Analytics: txn logged'],
-            'node-analytics': ['node-manager', 'Analytics → Manager: insight flagged'],
-            'node-automations': ['node-manager', 'Automations → Manager: wire active'],
-            'node-manager': ['node-analytics', 'Manager → Analytics: priority shifted'],
-          }
-          const trigger = triggerMap[nodeId]
-          if (trigger && Math.random() > 0.35) {
-            const [target, label] = trigger
-            setTimeout(() => get().fireAutomation(nodeId, target, label), 400)
-          }
-        }, delay)
+        // Phase 3 hook: chat-triggered automation (unchanged behavior)
+        const triggerMap: Record<string, [string, string]> = {
+          'node-storefront': ['node-content', 'Storefront → Content: idea queued'],
+          'node-customer': ['node-email', 'Customer → Email: nurture queued'],
+          'node-email': ['node-payments', 'Email → Payments: receipt sync'],
+          'node-content': ['node-email', 'Content → Email: campaign asset ready'],
+          'node-payments': ['node-analytics', 'Payments → Analytics: txn logged'],
+          'node-analytics': ['node-manager', 'Analytics → Manager: insight flagged'],
+          'node-automations': ['node-manager', 'Automations → Manager: wire active'],
+          'node-manager': ['node-analytics', 'Manager → Analytics: priority shifted'],
+        }
+        const trigger = triggerMap[nodeId]
+        if (trigger && Math.random() > 0.35) {
+          const [target, label] = trigger
+          setTimeout(() => get().fireAutomation(nodeId, target, label), 400)
+        }
       },
 
       addClone: ({ parentId, specialization }) => {

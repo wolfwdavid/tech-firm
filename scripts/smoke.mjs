@@ -18,10 +18,13 @@ async function main() {
     if (msg.type() === 'error') errors.push(`console.error: ${msg.text()}`)
   })
 
-  await page.goto(URL, { waitUntil: 'networkidle', timeout: 20000 })
+  // Clear localStorage so boot intro replays each smoke run
+  await page.goto(URL, { waitUntil: 'domcontentloaded', timeout: 20000 })
+  await page.evaluate(() => localStorage.clear())
+  await page.reload({ waitUntil: 'networkidle', timeout: 20000 })
 
   // Wait for the boot intro to clear and the React Flow nodes to appear
-  await page.waitForSelector('.react-flow', { timeout: 10000 })
+  await page.waitForSelector('.react-flow__node', { timeout: 15000 })
 
   // Wait for the auto-open Manager drawer to appear (3.1s after mount)
   await page.waitForTimeout(4000)
