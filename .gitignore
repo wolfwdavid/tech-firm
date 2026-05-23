@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vite
+.DS_Store
+*.log
+
+# environment — never commit real keys
+.env
+.env.*
+!.env.example

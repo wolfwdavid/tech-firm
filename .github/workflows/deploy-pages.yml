@@ -1,0 +1,61 @@
+name: Deploy Manager dashboard to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Only one deploy in flight at a time; cancel any older one if a new push arrives.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          # Anon publishable key is safe in the build — it's designed for browser use.
+          # If you need to rotate, swap the value here.
+          VITE_SUPABASE_URL: https://gjwsynactczwuuvhvlkj.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_iWGxktgsNrUq0zr8mdqSZA_psJtz5_E
+          # GitHub Pages is static-only — live agents need a server. Force mock.
+          VITE_LIVE_AGENTS: 'false'
+          # Cross-machine pulses still work via Supabase Realtime (client-side).
+          VITE_REMOTE_AUTOMATIONS: 'true'
+        run: npm run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
